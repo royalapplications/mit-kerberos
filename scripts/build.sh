@@ -237,7 +237,7 @@ echo "Creating Apple-Universal XCFramework at ${TARGET_DIR}/MITKerberos.xcframew
 #   -output "${TARGET_DIR}/MITKerberos.xcframework"
 
 xcodebuild -create-xcframework \
-  -library "${TARGET_DIR_MACOS_UNIVERSAL}/bin/lib/libMITKerberos.a" \
+  -library "${TARGET_DIR_MACOS_UNIVERSAL}/lib/libMITKerberos.a" \
   -output "${TARGET_DIR}/MITKerberos.xcframework"
 
 echo "Codesigning XCFramework"
