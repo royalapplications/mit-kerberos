@@ -50,6 +50,9 @@ mkdir "${TARGET_DIR}"
 
 SRC_DIR="${BUILD_DIR}/src"
 
+# TODO
+OPENSSL_BASE_DIR="/Users/fx/dev/royalapps/freerdpkit/bin/OpenSSL/openssl-3.2.1"
+
 build() {
   local os="$1"
   local arch="$2"
@@ -63,43 +66,59 @@ build() {
 
   cd "${build_target_dir}"
 
+  local install_dir="${build_target_dir}/bin"
+
   local cflags="-DDEFAULT_RDNS_LOOKUP=0"
   local ldflags="-framework Kerberos"
   local target=""
 
   local os_name=""
 
-  # TODO: OpenSSL
+  local openssl_lib_dir="${OPENSSL_BASE_DIR}/${os}/lib"
+  local openssl_include_dir="${OPENSSL_BASE_DIR}/${os}/include"
 
   if [ "$os" = "macosx" ]; then
     os_name="macOS"
     local sdk_root=$(xcrun --sdk macosx --show-sdk-path)
 
-    # TODO
-    local openssl_lib_dir="/Users/fx/dev/royalapps/freerdpkit/bin/OpenSSL/openssl-3.2.1/macosx/lib"
-    local openssl_include_dir="/Users/fx/dev/royalapps/freerdpkit/bin/OpenSSL/openssl-3.2.1/macosx/include"
-
-    cflags="${cflags} -isysroot ${sdk_root} -mmacosx-version-min=${MACOS_VERSION_MIN} -I ${openssl_include_dir}"
-    ldflags="${ldflags} -isysroot ${sdk_root} -mmacosx-version-min=${MACOS_VERSION_MIN} -L ${openssl_lib_dir}"
     target="${arch}-apple-darwin"
+
+    cflags="${cflags} -isysroot ${sdk_root} -mmacosx-version-min=${MACOS_VERSION_MIN} -target ${target} -I ${openssl_include_dir}"
+    ldflags="${ldflags} -isysroot ${sdk_root} -mmacosx-version-min=${MACOS_VERSION_MIN} -L ${openssl_lib_dir}"
   elif [ "$os" = "iphoneos" ]; then
     os_name="iOS"
     local sdk_root=$(xcrun --sdk iphoneos --show-sdk-path)
 
-    cflags="${cflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -target ${arch}-apple-ios"
-    ldflags="${ldflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -target ${arch}-apple-ios"
+    target="${arch}-apple-ios"
+
+    cflags="${cflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -target ${target} -I ${openssl_include_dir}"
+    ldflags="${ldflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -L ${openssl_lib_dir}"
   elif [ "$os" = "iphonesimulator" ]; then
     os_name="iOS Simulator"
     local sdk_root=$(xcrun --sdk iphonesimulator --show-sdk-path)
 
-    cflags="${cflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -target ${arch}-apple-ios-simulator"
-    ldflags="${ldflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN}  -target ${arch}-apple-ios-simulator"
+    target="${arch}-apple-ios-simulator"
+
+    cflags="${cflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -target ${target} -I ${openssl_include_dir}"
+    ldflags="${ldflags} -isysroot ${sdk_root} -miphoneos-version-min=${IOS_VERSION_MIN} -L ${openssl_lib_dir}"
   fi
 
-  # echo "Cleaning"
-  # make clean -C "${SRC_DIR}"
+  # MIT Kerberos cannot be built statically directly as there's a duplicate symbols in dbutil and so, we have to first build dynamically, then statically.
 
-  echo "Configuring MIT Kerberos for ${os_name} ${arch}"
+  echo "Configuring MIT Kerberos for ${os_name} ${arch}, dynamic"
+  "${SRC_DIR}/configure" \
+    CC=clang \
+    LDFLAGS="${ldflags}" \
+    CFLAGS="${cflags}" \
+    --host=${target} \
+    --without-system-verto \
+    --with-crypto-impl=openssl \
+    --prefix "${install_dir}"
+
+  echo "Making MIT Kerberos for ${os_name} ${arch}, dynamic"
+  make
+
+  echo "Configuring MIT Kerberos for ${os_name} ${arch}, static"
   "${SRC_DIR}/configure" \
     CC=clang \
     LDFLAGS="${ldflags}" \
@@ -108,17 +127,14 @@ build() {
     --without-system-verto \
     --with-crypto-impl=openssl \
     --enable-static \
-    --disable-shared
+    --disable-shared \
+    --prefix "${install_dir}"
 
-  echo "Making MIT Kerberos for ${os_name} ${arch}"
+  echo "Making MIT Kerberos for ${os_name} ${arch}, static"
   make
 
-  # make install -C "${BUILD_DIR}" \
-  #   DESTDIR="${build_target_dir}" \
-  #   PREFIX="" \
-  #   ARCH="${arch}" \
-  #   CFLAGS="${cflags}" \
-  #   LDFLAGS="${ldflags}"
+  echo "Making MIT Kerberos for ${os_name} ${arch}, install"
+  make install
 
   # echo "Removing all dylibs"
   # find "${build_target_dir}/lib" -iname '*.dylib' -delete
@@ -154,7 +170,7 @@ TARGET_DIR_MACOS_X86="${TARGET_DIR}/macosx-x86_64"
 # TARGET_DIR_IOS_SIMULATOR_X86="${TARGET_DIR}/iphonesimulator-x86_64"
 
 build "macosx" "aarch64" "${TARGET_DIR_MACOS_ARM64}"
-# build "macosx" "x86_64" "${TARGET_DIR_MACOS_X86}"
+build "macosx" "x86_64" "${TARGET_DIR_MACOS_X86}"
 # build "iphoneos" "aarch64" "${TARGET_DIR_IOS_ARM64}"
 # build "iphonesimulator" "aarch64" "${TARGET_DIR_IOS_SIMULATOR_ARM64}"
 # build "iphonesimulator" "x86_64" "${TARGET_DIR_IOS_SIMULATOR_X86}"
