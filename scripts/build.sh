@@ -3,7 +3,6 @@
 set -e
 
 MITKERBEROS_VERSION_STABLE="1.21.2" # https://kerberos.org/dist/
-MITKERBEROS_VERSION_SHORT_STABLE="1.21"
 
 OPENSSL_VERSION="3.2.1"
 
@@ -24,8 +23,11 @@ if [[ -z $MITKERBEROS_VERSION ]]; then
 fi
 
 if [[ -z $MITKERBEROS_VERSION_SHORT ]]; then
-  echo "MITKERBEROS_VERSION_SHORT not set; falling back to ${MITKERBEROS_VERSION_SHORT_STABLE} (Stable)"
-  MITKERBEROS_VERSION_SHORT="${MITKERBEROS_VERSION_SHORT_STABLE}"
+  short_version_length=${#MITKERBEROS_VERSION}
+  short_version_endindex=$(expr $short_version_length - 2)
+  MITKERBEROS_VERSION_SHORT="${MITKERBEROS_VERSION:0:$short_version_endindex}"
+
+  echo "MITKERBEROS_VERSION_SHORT not set; falling back to ${MITKERBEROS_VERSION_SHORT} (Stable)"
 fi
 
 if [[ ! -f "${BUILD_ROOT_DIR}/krb5-${MITKERBEROS_VERSION}.tar.gz" ]]; then
