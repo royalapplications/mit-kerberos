@@ -5,6 +5,8 @@ set -e
 MITKERBEROS_VERSION_STABLE="1.21.2" # https://kerberos.org/dist/
 MITKERBEROS_VERSION_SHORT_STABLE="1.21"
 
+OPENSSL_VERSION="3.2.1"
+
 IOS_VERSION_MIN="13.4"
 MACOS_VERSION_MIN="11.0"
 CODESIGN_ID="-"
@@ -42,17 +44,30 @@ fi
 
 TARGET_DIR="${BUILD_ROOT_DIR}/mitkerberos-${MITKERBEROS_VERSION}"
 
-# TODO: Re-enable
-# if [[ -d "${TARGET_DIR}" ]]; then
-#   rm -rf "${TARGET_DIR}"
-# fi
+if [[ -d "${TARGET_DIR}" ]]; then
+  rm -rf "${TARGET_DIR}"
+fi
 
-# mkdir "${TARGET_DIR}"
+mkdir "${TARGET_DIR}"
 
 SRC_DIR="${BUILD_DIR}/src"
 
-# TODO
-OPENSSL_BASE_DIR="/Users/fx/dev/royalapps/freerdpkit/bin/OpenSSL/openssl-3.2.1"
+OPENSSL_BASE_DIR="${BUILD_ROOT_DIR}/openssl"
+
+if [[ -d "${OPENSSL_BASE_DIR}" ]]; then
+  rm -rf "${OPENSSL_BASE_DIR}"
+fi
+
+mkdir "${OPENSSL_BASE_DIR}"
+
+OPENSSL_DL_FILENAME="openssl.tar.gz"
+OPENSSL_URL="https://github.com/royalapplications/openssl/releases/download/${OPENSSL_VERSION}/${OPENSSL_DL_FILENAME}"
+
+echo "Downloading OpenSSL release from ${OPENSSL_URL}"
+curl -fL "${OPENSSL_URL}" -o "${BUILD_ROOT_DIR}/${OPENSSL_DL_FILENAME}"
+
+echo "Extracting OpenSSL"
+tar -xvf "${BUILD_ROOT_DIR}/${OPENSSL_DL_FILENAME}" --directory "${OPENSSL_BASE_DIR}"
 
 build() {
   local os="$1"
@@ -154,11 +169,10 @@ TARGET_DIR_IOS_ARM64="${TARGET_DIR}/iphoneos"
 TARGET_DIR_IOS_SIMULATOR_ARM64="${TARGET_DIR}/iphonesimulator-arm64"
 TARGET_DIR_IOS_SIMULATOR_X86="${TARGET_DIR}/iphonesimulator-x86_64"
 
-# TODO: Re-enable
-# build "macosx" "aarch64" "${TARGET_DIR_MACOS_ARM64}"
-# build "macosx" "x86_64" "${TARGET_DIR_MACOS_X86}"
+build "macosx" "aarch64" "${TARGET_DIR_MACOS_ARM64}"
+build "macosx" "x86_64" "${TARGET_DIR_MACOS_X86}"
 
-# TODO: For iOS
+# TODO: iOS
 # build "iphoneos" "aarch64" "${TARGET_DIR_IOS_ARM64}"
 # build "iphonesimulator" "aarch64" "${TARGET_DIR_IOS_SIMULATOR_ARM64}"
 # build "iphonesimulator" "x86_64" "${TARGET_DIR_IOS_SIMULATOR_X86}"
