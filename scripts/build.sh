@@ -42,11 +42,12 @@ fi
 
 TARGET_DIR="${BUILD_ROOT_DIR}/mitkerberos-${MITKERBEROS_VERSION}"
 
-if [[ -d "${TARGET_DIR}" ]]; then
-  rm -rf "${TARGET_DIR}"
-fi
+# TODO: Re-enable
+# if [[ -d "${TARGET_DIR}" ]]; then
+#   rm -rf "${TARGET_DIR}"
+# fi
 
-mkdir "${TARGET_DIR}"
+# mkdir "${TARGET_DIR}"
 
 SRC_DIR="${BUILD_DIR}/src"
 
@@ -153,8 +154,9 @@ TARGET_DIR_IOS_ARM64="${TARGET_DIR}/iphoneos"
 TARGET_DIR_IOS_SIMULATOR_ARM64="${TARGET_DIR}/iphonesimulator-arm64"
 TARGET_DIR_IOS_SIMULATOR_X86="${TARGET_DIR}/iphonesimulator-x86_64"
 
-build "macosx" "aarch64" "${TARGET_DIR_MACOS_ARM64}"
-build "macosx" "x86_64" "${TARGET_DIR_MACOS_X86}"
+# TODO: Re-enable
+# build "macosx" "aarch64" "${TARGET_DIR_MACOS_ARM64}"
+# build "macosx" "x86_64" "${TARGET_DIR_MACOS_X86}"
 
 # TODO: For iOS
 # build "iphoneos" "aarch64" "${TARGET_DIR_IOS_ARM64}"
@@ -218,24 +220,45 @@ make_universal_libs() {
   done
 }
 
+merge_static_libs() {
+  local target_dir="$1"
+  local output_file="$2"
+
+  xcrun libtool -static \
+    "${target_dir}/libkrb5.a" \
+    "${target_dir}/libkrb5support.a" \
+    "${target_dir}/libk5crypto.a" \
+    -o "${output_file}"
+}
+
 echo "Making universal libs for macOS"
 make_universal_libs \
     "${TARGET_DIR_MACOS_UNIVERSAL}/lib" \
     "${TARGET_DIR_MACOS_ARM64}/bin/lib" \
     "${TARGET_DIR_MACOS_X86}/bin/lib"
 
+merge_static_libs \
+  "${TARGET_DIR_MACOS_UNIVERSAL}/lib" \
+  "${TARGET_DIR_MACOS_UNIVERSAL}/lib/libMITKerberos.a"
+
 echo "Copying headers for macOS"
 cp -r \
   "${TARGET_DIR_MACOS_ARM64}/bin/include" \
   "${TARGET_DIR_MACOS_UNIVERSAL}/include"
 
-# echo "Making universal libs for iOS"
-# make_universal_libs \
-#     "${TARGET_DIR_IOS_SIMULATOR_UNIVERSAL}/lib" \
-#     "${TARGET_DIR_IOS_SIMULATOR_ARM64}/bin/lib" \
-#     "${TARGET_DIR_IOS_SIMULATOR_X86}/bin/lib"
+echo "Creating macOS-Universal XCFramework at ${TARGET_DIR}/MITKerberos.xcframework"
 
-# echo "Copying headers for iOS"
-# cp -r \
-#   "${TARGET_DIR_IOS_SIMULATOR_ARM64}/include" \
-#   "${TARGET_DIR_IOS_SIMULATOR_UNIVERSAL}/include"
+if [[ -d "${TARGET_DIR}/MITKerberos.xcframework" ]]; then
+  rm -rf "${TARGET_DIR}/MITKerberos.xcframework"
+fi
+
+xcodebuild -create-xcframework \
+  -library "${TARGET_DIR_MACOS_UNIVERSAL}/lib/libMITKerberos.a" \
+  -output "${TARGET_DIR}/MITKerberos.xcframework"
+
+echo "Codesigning XCFramework"
+
+codesign \
+    --force --deep --strict \
+    --sign "${CODESIGN_ID}" \
+    "${TARGET_DIR}/MITKerberos.xcframework"
