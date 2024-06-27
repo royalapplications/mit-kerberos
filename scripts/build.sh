@@ -2,7 +2,7 @@
 
 set -e
 
-MITKERBEROS_VERSION_STABLE="1.21.2" # https://kerberos.org/dist/
+MITKERBEROS_VERSION_STABLE="1.21.3" # https://kerberos.org/dist/
 
 OPENSSL_VERSION="3.2.2"
 
@@ -53,6 +53,20 @@ fi
 mkdir "${TARGET_DIR}"
 
 SRC_DIR="${BUILD_DIR}/src"
+
+echo "Initializing git"
+git init "${BUILD_DIR}"
+
+echo "Adding all files to git"
+git -C "${BUILD_DIR}" add .
+
+echo "Committing initial state to git"
+git -C "${BUILD_DIR}" commit -m "Initial"
+
+NO_URI_LOOKUP_PATCH_FILENAME="no_uri_lookup.patch"
+
+echo "Applying ${NO_URI_LOOKUP_PATCH_FILENAME} patch to git"
+git -C "${BUILD_DIR}" apply "${SCRIPT_PATH}/${NO_URI_LOOKUP_PATCH_FILENAME}"
 
 OPENSSL_BASE_DIR="${BUILD_ROOT_DIR}/openssl"
 
