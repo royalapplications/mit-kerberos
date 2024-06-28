@@ -2,9 +2,7 @@
 
 set -e
 
-MITKERBEROS_VERSION_STABLE="1.21.3" # https://kerberos.org/dist/
-
-OPENSSL_VERSION="3.3.1"
+MITKERBEROS_VERSION_STABLE="1.21.3_openssl-3.3.1" # https://kerberos.org/dist/
 
 IOS_VERSION_MIN="13.4"
 MACOS_VERSION_MIN="11.0"
@@ -20,6 +18,16 @@ mkdir -p "${BUILD_ROOT_DIR}"
 if [[ -z $MITKERBEROS_VERSION ]]; then
   echo "MITKERBEROS_VERSION not set; falling back to ${MITKERBEROS_VERSION_STABLE} (Stable)"
   MITKERBEROS_VERSION="${MITKERBEROS_VERSION_STABLE}"
+fi
+
+if [[ "${MITKERBEROS_VERSION}" =~ ^([^_]+)_openssl-(.*)$ ]]; then
+  MITKERBEROS_VERSION="${BASH_REMATCH[1]}"
+  OPENSSL_VERSION="${BASH_REMATCH[2]}"
+  echo "MITKERBEROS_VERSION extracted: ${MITKERBEROS_VERSION}"
+  echo "OPENSSL_VERSION extracted: ${OPENSSL_VERSION}"
+else
+  echo "Cannot parse MITKERBEROS_VERSION: ${MITKERBEROS_VERSION}"
+  exit 1
 fi
 
 if [[ -z $MITKERBEROS_VERSION_SHORT ]]; then
@@ -44,7 +52,7 @@ if [[ ! -d "${BUILD_DIR}" ]]; then
   tar xzf "${BUILD_ROOT_DIR}/krb5-${MITKERBEROS_VERSION}.tar.gz" -C "${BUILD_DIR}" --strip-components=1
 fi
 
-TARGET_DIR="${BUILD_ROOT_DIR}/mitkerberos-${MITKERBEROS_VERSION}"
+TARGET_DIR="${BUILD_ROOT_DIR}/mitkerberos-${MITKERBEROS_VERSION}_openssl-${OPENSSL_VERSION}"
 
 if [[ -d "${TARGET_DIR}" ]]; then
   rm -rf "${TARGET_DIR}"
@@ -68,7 +76,7 @@ NO_URI_LOOKUP_PATCH_FILENAME="no_uri_lookup.patch"
 echo "Applying ${NO_URI_LOOKUP_PATCH_FILENAME} patch to git"
 git -C "${BUILD_DIR}" apply "${SCRIPT_PATH}/${NO_URI_LOOKUP_PATCH_FILENAME}"
 
-OPENSSL_BASE_DIR="${BUILD_ROOT_DIR}/openssl"
+OPENSSL_BASE_DIR="${BUILD_ROOT_DIR}/openssl-${OPENSSL_VERSION}"
 
 if [[ -d "${OPENSSL_BASE_DIR}" ]]; then
   rm -rf "${OPENSSL_BASE_DIR}"
@@ -76,8 +84,9 @@ fi
 
 mkdir "${OPENSSL_BASE_DIR}"
 
-OPENSSL_DL_FILENAME="openssl.tar.gz"
-OPENSSL_URL="https://github.com/royalapplications/openssl/releases/download/${OPENSSL_VERSION}/${OPENSSL_DL_FILENAME}"
+OPENSSL_URL="https://github.com/royalapplications/openssl/releases/download/${OPENSSL_VERSION}/openssl.tar.gz"
+
+OPENSSL_DL_FILENAME="openssl-${OPENSSL_VERSION}.tar.gz"
 
 echo "Downloading OpenSSL release from ${OPENSSL_URL}"
 curl -fL "${OPENSSL_URL}" -o "${BUILD_ROOT_DIR}/${OPENSSL_DL_FILENAME}"
