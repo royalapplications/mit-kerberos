@@ -2,7 +2,7 @@
 
 set -e
 
-MITKERBEROS_VERSION_STABLE="1.21.3_openssl-3.5.2" # https://kerberos.org/dist/
+MITKERBEROS_VERSION_STABLE="1.22_openssl-3.5.2" # https://kerberos.org/dist/
 
 IOS_VERSION_MIN="13.4"
 MACOS_VERSION_MIN="11.0"
@@ -31,9 +31,11 @@ else
 fi
 
 if [[ -z $MITKERBEROS_VERSION_SHORT ]]; then
-  short_version_length=${#MITKERBEROS_VERSION}
-  short_version_endindex=$(expr $short_version_length - 2)
-  MITKERBEROS_VERSION_SHORT="${MITKERBEROS_VERSION:0:$short_version_endindex}"
+  if [[ "${MITKERBEROS_VERSION}" =~ ^(\d+\.\d+)\.\d+$ ]]; then
+    MITKERBEROS_VERSION_SHORT="${BASH_REMATCH[1]}"
+  else
+    MITKERBEROS_VERSION_SHORT="${MITKERBEROS_VERSION}"
+  fi
 
   echo "MITKERBEROS_VERSION_SHORT not set; falling back to ${MITKERBEROS_VERSION_SHORT} (Stable)"
 fi

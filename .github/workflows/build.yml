@@ -25,8 +25,8 @@ jobs:
     name: Build
     runs-on: macos-14
 
-    env: # use tag version, if available, falling back to 1.21.3 (stable)
-      MITKERBEROS_VERSION: "${{ startsWith(github.ref, 'refs/tags/1.') && github.ref_name || '1.21.3_openssl-3.5.2' }}"
+    env: # use tag version, if available, falling back to 1.22 (stable)
+      MITKERBEROS_VERSION: "${{ startsWith(github.ref, 'refs/tags/1.') && github.ref_name || '1.22_openssl-3.5.2' }}"
       PUBLISH_RELEASE: "${{ startsWith(github.ref, 'refs/tags/1.') && '1' || '0' }}"
 
     steps:

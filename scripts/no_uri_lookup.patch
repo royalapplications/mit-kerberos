@@ -1,5 +1,5 @@
 diff --git a/src/lib/krb5/os/locate_kdc.c b/src/lib/krb5/os/locate_kdc.c
-index edca5ac..cb6f202 100644
+index d1df04a..d099f1b 100644
 --- a/src/lib/krb5/os/locate_kdc.c
 +++ b/src/lib/krb5/os/locate_kdc.c
 @@ -36,7 +36,7 @@
@@ -9,5 +9,5 @@ index edca5ac..cb6f202 100644
 -#define DEFAULT_URI_LOOKUP TRUE
 +#define DEFAULT_URI_LOOKUP FALSE
  
- static int
- maybe_use_dns (krb5_context context, const char *name, int defalt)
+ struct kdclist_entry {
+     krb5_data realm;
