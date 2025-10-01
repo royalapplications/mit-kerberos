@@ -2,7 +2,7 @@
 
 set -e
 
-MITKERBEROS_VERSION_STABLE="1.22_openssl-3.5.2" # https://kerberos.org/dist/
+MITKERBEROS_VERSION_STABLE="1.22_openssl-3.5.4" # https://kerberos.org/dist/
 
 IOS_VERSION_MIN="13.4"
 MACOS_VERSION_MIN="11.0"
