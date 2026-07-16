@@ -46,7 +46,7 @@ jobs:
 
     - name: save cache
       if: "steps.cache-mitkerberos-src.outputs.cache-hit != 'true'"
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@v6
       with:
         key: "${{ steps.cache-mitkerberos-src.outputs.cache-primary-key }}"
         path: |
