@@ -44,6 +44,13 @@ jobs:
     - name: build
       run: scripts/build.sh
 
+    - name: verify packaged KDC Proxy support
+      run: |
+        OPENSSL_VERSION="${MITKERBEROS_VERSION##*_openssl-}"
+        python3 scripts/tests/test_kdc_proxy.py \
+          "build/mitkerberos-${MITKERBEROS_VERSION}" \
+          "build/openssl-${OPENSSL_VERSION%_r*}/macosx"
+
     - name: save cache
       if: "steps.cache-mitkerberos-src.outputs.cache-hit != 'true'"
       uses: actions/cache/save@v6

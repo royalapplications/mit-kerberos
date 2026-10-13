@@ -81,6 +81,11 @@ NO_URI_LOOKUP_PATCH_FILENAME="no_uri_lookup.patch"
 echo "Applying ${NO_URI_LOOKUP_PATCH_FILENAME} patch to git"
 git -C "${BUILD_DIR}" apply "${SCRIPT_PATH}/${NO_URI_LOOKUP_PATCH_FILENAME}"
 
+STATIC_K5TLS_PATCH_FILENAME="static_k5tls.patch"
+
+echo "Applying ${STATIC_K5TLS_PATCH_FILENAME} patch to git"
+git -C "${BUILD_DIR}" apply "${SCRIPT_PATH}/${STATIC_K5TLS_PATCH_FILENAME}"
+
 OPENSSL_BASE_DIR="${BUILD_ROOT_DIR}/openssl-${OPENSSL_VERSION}"
 
 if [[ -d "${OPENSSL_BASE_DIR}" ]]; then
@@ -169,6 +174,7 @@ build() {
     --host=${target} \
     --without-system-verto \
     --with-crypto-impl=openssl \
+    --with-tls-impl=openssl \
     --prefix "${install_dir}"
 
   echo "Making MIT Kerberos for ${os_name} ${arch}, dynamic"
@@ -182,15 +188,18 @@ build() {
     --host=${target} \
     --without-system-verto \
     --with-crypto-impl=openssl \
+    --with-tls-impl=openssl \
     --enable-static \
     --disable-shared \
     --prefix "${install_dir}"
 
   echo "Making MIT Kerberos for ${os_name} ${arch}, static"
-  make
+  # Build k5tls before lib/kadm5's tools, which now link it through libkrb5.
+  make -C plugins/tls/k5tls
+  make KRB5_LIB='-lkrb5 -lkrb5_k5tls $(TLS_IMPL_LIBS)'
 
   echo "Making MIT Kerberos for ${os_name} ${arch}, install"
-  make install
+  make install KRB5_LIB='-lkrb5 -lkrb5_k5tls $(TLS_IMPL_LIBS)'
 }
 
 TARGET_DIR_MACOS_ARM64="${TARGET_DIR}/macosx-arm64"
@@ -272,6 +281,7 @@ merge_static_libs() {
     "${target_dir}/libkrb5.a" \
     "${target_dir}/libkrb5support.a" \
     "${target_dir}/libk5crypto.a" \
+    "${target_dir}/libkrb5_k5tls.a" \
     -o "${output_file}"
 }
 

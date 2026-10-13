@@ -1,0 +1,27 @@
+diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
+--- a/src/lib/krb5/os/sendto_kdc.c
++++ b/src/lib/krb5/os/sendto_kdc.c
+@@ -144,6 +144,11 @@
+     } http;
+ };
+
++#ifdef STATIC_PLUGINS
++krb5_error_code tls_k5tls_initvt(krb5_context context, int maj_ver, int min_ver,
++                               krb5_plugin_vtable vtable);
++#endif
++
+ /* Set up context->tls.  On allocation failure, return ENOMEM.  On plugin load
+  * failure, set context->tls to point to a nulled vtable and return 0. */
+ static krb5_error_code
+@@ -160,7 +165,11 @@
+         return ENOMEM;
+
+     /* Attempt to load the module; just let it stay nulled out on failure. */
++#ifdef STATIC_PLUGINS
++    k5_plugin_register(context, PLUGIN_INTERFACE_TLS, "k5tls", tls_k5tls_initvt);
++#else
+     k5_plugin_register_dyn(context, PLUGIN_INTERFACE_TLS, "k5tls", "tls");
++#endif
+     ret = k5_plugin_load(context, PLUGIN_INTERFACE_TLS, "k5tls", &initfn);
+     if (!ret)
+         (*initfn)(context, 0, 0, (krb5_plugin_vtable)context->tls);
