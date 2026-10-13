@@ -2,7 +2,7 @@
 
 set -e
 
-MITKERBEROS_VERSION_STABLE="1.22.2_openssl-3.6.5" # https://kerberos.org/dist/
+MITKERBEROS_VERSION_STABLE="1.22.2_openssl-3.6.5_r1" # https://kerberos.org/dist/
 
 IOS_VERSION_MIN="13.4"
 MACOS_VERSION_MIN="11.0"
@@ -20,7 +20,10 @@ if [[ -z $MITKERBEROS_VERSION ]]; then
   MITKERBEROS_VERSION="${MITKERBEROS_VERSION_STABLE}"
 fi
 
-if [[ "${MITKERBEROS_VERSION}" =~ ^([^_]+)_openssl-(.*)$ ]]; then
+# Keep the package revision in output names.
+MITKERBEROS_RELEASE_VERSION="${MITKERBEROS_VERSION}"
+
+if [[ "${MITKERBEROS_VERSION}" =~ ^([^_]+)_openssl-([^_]+)(_r[1-9][0-9]*)?$ ]]; then
   MITKERBEROS_VERSION="${BASH_REMATCH[1]}"
   OPENSSL_VERSION="${BASH_REMATCH[2]}"
   echo "MITKERBEROS_VERSION extracted: ${MITKERBEROS_VERSION}"
@@ -54,7 +57,7 @@ if [[ ! -d "${BUILD_DIR}" ]]; then
   tar xzf "${BUILD_ROOT_DIR}/krb5-${MITKERBEROS_VERSION}.tar.gz" -C "${BUILD_DIR}" --strip-components=1
 fi
 
-TARGET_DIR="${BUILD_ROOT_DIR}/mitkerberos-${MITKERBEROS_VERSION}_openssl-${OPENSSL_VERSION}"
+TARGET_DIR="${BUILD_ROOT_DIR}/mitkerberos-${MITKERBEROS_RELEASE_VERSION}"
 
 if [[ -d "${TARGET_DIR}" ]]; then
   rm -rf "${TARGET_DIR}"
