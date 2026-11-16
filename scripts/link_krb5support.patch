@@ -1,0 +1,13 @@
+diff --git a/src/lib/rpc/Makefile.in b/src/lib/rpc/Makefile.in
+index 39db2d3..287661a 100644
+--- a/src/lib/rpc/Makefile.in
++++ b/src/lib/rpc/Makefile.in
+@@ -15,7 +15,7 @@ SHLIB_EXPDEPS= \
+ 	$(TOPLIBD)/libkrb5$(SHLIBEXT) \
+ 	$(TOPLIBD)/libk5crypto$(SHLIBEXT) \
+ 	$(COM_ERR_DEPLIB)
+-SHLIB_EXPLIBS=-lgssapi_krb5 -lkrb5 -lk5crypto $(COM_ERR_LIB) $(LIBS)
++SHLIB_EXPLIBS=-lgssapi_krb5 -lkrb5 -lk5crypto $(COM_ERR_LIB) -lkrb5support $(LIBS)
+ RELDIR=rpc
+ 
+ SRCS = $(srcdir)/auth_none.c \

@@ -2,7 +2,7 @@
 
 set -e
 
-MITKERBEROS_VERSION_STABLE="1.22.2_openssl-3.6.5_r1" # https://kerberos.org/dist/
+MITKERBEROS_VERSION_STABLE="1.22.3_openssl-3.6.5" # https://kerberos.org/dist/
 
 IOS_VERSION_MIN="13.4"
 MACOS_VERSION_MIN="11.0"
@@ -85,6 +85,13 @@ STATIC_K5TLS_PATCH_FILENAME="static_k5tls.patch"
 
 echo "Applying ${STATIC_K5TLS_PATCH_FILENAME} patch to git"
 git -C "${BUILD_DIR}" apply "${SCRIPT_PATH}/${STATIC_K5TLS_PATCH_FILENAME}"
+
+# libgssrpc uses k5_secure_getenv (libkrb5support) but upstream doesn't link it directly,
+# which fails with Apple's linker. Add it explicitly.
+LINK_KRB5SUPPORT_PATCH_FILENAME="link_krb5support.patch"
+
+echo "Applying ${LINK_KRB5SUPPORT_PATCH_FILENAME} patch to git"
+git -C "${BUILD_DIR}" apply "${SCRIPT_PATH}/${LINK_KRB5SUPPORT_PATCH_FILENAME}"
 
 OPENSSL_BASE_DIR="${BUILD_ROOT_DIR}/openssl-${OPENSSL_VERSION}"
 
